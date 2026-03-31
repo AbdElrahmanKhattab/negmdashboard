@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@media print {
+  body * { visibility: hidden; }
+  .print-source, .print-source * { visibility: visible; }
+  .print-source {
+    position: absolute; left: 0; right: 0; top: 0; width: 100%; 
+    box-shadow: none !important; border: none !important;
+  }
+  .print-hide { display: none !important; }
+  .print-hide-container { border: none !important; box-shadow: none !important; background: white !important; }
+  .print-preview-scroll { overflow: visible !important; padding: 0 !important; }
+  .print-canvas { width: 100% !important; max-width: 100% !important; display: block; }
+  @page { margin: 0; size: auto; }
+}
+
+@theme {
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-overlay: var(--bg-overlay);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-critical: var(--status-critical);
+  --color-status-paid: var(--status-paid);
+  --color-status-pending: var(--status-pending);
+  --color-status-late: var(--status-late);
+
+  --color-income: var(--income-color);
+  --color-expense: var(--expense-color);
+  --color-net-positive: var(--net-positive);
+  --color-net-negative: var(--net-negative);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  :root {
+    /* Premium UI Defaults (Light Theme as requested) */
+    --bg-base:        #f4f7fb;
+    --bg-surface:     #ffffff;
+    --bg-elevated:    #ffffff;
+    --bg-overlay:     rgba(15, 23, 42, 0.4);
+
+    /* Borders */
+    --border-subtle:  #f1f5f9;
+    --border-default: #e2e8f0;
+    --border-strong:  #cbd5e1;
+
+    /* Text */
+    --text-primary:   #0f172a;    /* Slate 900 */
+    --text-secondary: #475569;    /* Slate 600 */
+    --text-muted:     #94a3b8;    /* Slate 400 */
+
+    /* Brand accent */
+    --accent:         #0d47a1;    /* Deep Blue from screenshot */
+    --accent-hover:   #1565c0;
+
+    /* Status colors */
+    --status-good:    #10b981;    /* Emerald 500 */
+    --status-warning: #f59e0b;    /* Amber 500 */
+    --status-critical:#ef4444;    /* Red 500 */
+    --status-paid:    #10b981;
+    --status-pending: #f59e0b;
+    --status-late:    #ef4444;
+
+    /* Financial */
+    --income-color:   #10b981;
+    --expense-color:  #ef4444;
+    --net-positive:   #10b981;
+    --net-negative:   #ef4444;
+
+    /* Typography */
+    --font-sans:      'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono:      'IBM Plex Mono', monospace;
+  }
+
+  /* Keep dark mode intact but update to match premium vibes if needed */
+  .dark {
+    --bg-base:        #0f172a;
+    --bg-surface:     #1e293b;
+    --bg-elevated:    #334155;
+    --bg-overlay:     rgba(15, 23, 42, 0.8);
+
+    --border-subtle:  #334155;
+    --border-default: #475569;
+    --border-strong:  #64748b;
+
+    --text-primary:   #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted:     #94a3b8;
+
+    --accent:         #3b82f6;
+    --accent-hover:   #60a5fa;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border-default;
+  }
+  body {
+    @apply bg-bg-base text-text-primary font-sans antialiased selection:bg-accent/30 selection:text-text-primary;
+  }
+}
