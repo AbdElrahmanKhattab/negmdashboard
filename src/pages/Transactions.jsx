@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Filter, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
@@ -29,8 +30,9 @@ const CATEGORY_MAP_EN = {
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showForm, setShowForm] = useState(false);
   const { data: transactions, isLoading } = useTransactions();
+  const role = useAuthStore(state => state.role);
+  const canManageTx = role === 'owner' || role === 'accountant';
 
   const txns = (transactions || []).filter(t =>
     t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -94,10 +96,12 @@ export default function Transactions() {
           </h1>
           <p className="text-sm font-sans text-text-secondary mt-1 font-medium">Complete record of all incoming and outgoing financial transactions.</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="bg-[#0d47a1] hover:bg-[#1565c0] text-white font-sans flex items-center gap-2 shadow-sm h-10 px-5 transition-colors border border-[#0d47a1]">
-          <Plus className="w-4 h-4 ml-1" />
-          <span className="font-bold text-sm">New Transaction</span>
-        </Button>
+        {canManageTx && (
+          <Button onClick={() => setShowForm(true)} className="bg-[#0d47a1] hover:bg-[#1565c0] text-white font-sans flex items-center gap-2 shadow-sm h-10 px-5 transition-colors border border-[#0d47a1]">
+            <Plus className="w-4 h-4 ml-1" />
+            <span className="font-bold text-sm">New Transaction</span>
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}

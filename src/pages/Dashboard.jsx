@@ -2,8 +2,10 @@ import React from 'react';
 import KPICard from '@/components/common/KPICard';
 import { useAuthStore } from '@/stores/authStore';
 import { useDashboardKPIs, useProjects, useTransactions } from '@/hooks/useData';
-import { WalletCards, Calendar, CandlestickChart, AlertTriangle, Download, FileText, Search, Filter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { WalletCards, Calendar, CandlestickChart, AlertTriangle, Download, FileText, Search, Filter, FileSpreadsheet } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useInvoiceSearch } from '@/hooks/useData';
+import { useState } from 'react';
 
 // New Custom Widgets
 import EfficiencyWidget from '@/components/dashboard/EfficiencyWidget';
@@ -12,6 +14,7 @@ import TopClients from '@/components/dashboard/TopClients';
 import RecentLogs from '@/components/dashboard/RecentLogs';
 import Avatar from '@/components/common/Avatar';
 import { cn } from '@/lib/utils';
+import { exportFinancialXLS } from '@/lib/exportUtils';
 
 const CATEGORY_MAP_EN = {
   project_payment: 'Project Payment',
@@ -24,10 +27,14 @@ const CATEGORY_MAP_EN = {
 
 export default function Dashboard() {
   const user = useAuthStore(state => state.user);
+  const navigate = useNavigate();
   
   const { data: dbKpis, isLoading: kpisLoading } = useDashboardKPIs();
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: projects, isLoading: projectsLoading } = useProjects();
+  
+  const [searchId, setSearchId] = useState('');
+  const { data: searchResults } = useInvoiceSearch(searchId);
 
   const k = dbKpis || { totalIncome: 0, totalExpenses: 0, activeProjects: 0, lateMilestones: 0, totalContractValue: 0 };
   
@@ -56,11 +63,59 @@ export default function Dashboard() {
           <p className="text-sm font-sans text-text-secondary mt-1 font-medium">Operational Overview for Project Alpha Engineering Cluster.</p>
         </div>
         
+        {/* Invoice Search Bar */}
+        <div className="flex-1 max-w-md relative no-print">
+          <div className="relative group">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted transition-colors group-focus-within:text-accent" />
+            <input 
+              type="text" 
+              placeholder="Search by Invoice ID (e.g. INV-A632)..."
+              className="w-full pr-10 pl-4 py-2 bg-white border border-border-default rounded-lg text-sm font-sans focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              onChange={(e) => setSearchId(e.target.value)}
+              value={searchId}
+            />
+          </div>
+          
+          {searchResults && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-border-default rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-border-subtle animate-in fade-in slide-in-from-top-1">
+              <div className="px-4 py-2 bg-bg-base/50 text-[10px] font-bold text-text-muted uppercase tracking-wider">Matched Invoices</div>
+              {searchResults.map(doc => (
+                <div 
+                  key={doc.id}
+                  onClick={() => window.open(doc.file_url, '_blank')}
+                  className="px-4 py-3 hover:bg-bg-base cursor-pointer flex items-center justify-between group transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-accent/5 rounded-lg group-hover:bg-accent/10">
+                      <FileText className="w-4 h-4 text-accent" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-text-primary flex items-center gap-2">
+                        {doc.invoice_id}
+                        <span className="text-[10px] font-normal text-text-muted">({doc.project?.name})</span>
+                      </div>
+                      <div className="text-[10px] text-text-muted mt-0.5">{doc.name}</div>
+                    </div>
+                  </div>
+                  <Download className="w-4 h-4 text-text-muted group-hover:text-accent opacity-0 group-hover:opacity-100 transition-all" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 rounded-md bg-[#f1f5f9] text-text-primary text-sm font-semibold hover:bg-[#e2e8f0] transition-colors border border-border-default font-sans">
-            Export CSV
+          <button 
+            onClick={() => exportFinancialXLS(transactions, 'all')}
+            className="px-4 py-2 rounded-md bg-[#10b981] text-white text-sm font-semibold hover:bg-[#059669] transition-colors border border-[#10b981] font-sans flex items-center gap-2"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Export XLS
           </button>
-          <button className="px-4 py-2 rounded-md bg-[#0d47a1] text-white text-sm font-semibold shadow-sm hover:bg-[#1565c0] transition-colors font-sans border border-[#0d47a1]">
+          <button 
+            onClick={() => navigate('/reports')}
+            className="px-4 py-2 rounded-md bg-[#0d47a1] text-white text-sm font-semibold shadow-sm hover:bg-[#1565c0] transition-colors font-sans border border-[#0d47a1]"
+          >
             Generate Report
           </button>
         </div>

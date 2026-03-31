@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDocuments, useCreateDocument, useDeleteDocument } from '@/hooks/useData';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import FileUpload from '@/components/common/FileUpload';
 import { FileText, Download, Trash2, Calendar, User, File } from 'lucide-react';
@@ -11,6 +12,8 @@ export default function ProjectDocuments({ projectId }) {
   const { data: documents, isLoading } = useDocuments(projectId);
   const createDoc = useCreateDocument();
   const deleteDoc = useDeleteDocument();
+  const role = useAuthStore(state => state.role);
+  const isOwner = role === 'owner';
 
   const handleUploadComplete = (file) => {
     if (!file) return;
@@ -49,6 +52,15 @@ export default function ProjectDocuments({ projectId }) {
       }
     },
     {
+      title: 'رقم الفاتورة',
+      key: 'invoice_id',
+      render: (val) => val ? (
+        <span className="inline-flex items-center px-2 py-1 rounded bg-accent/5 text-accent font-mono text-[10px] font-bold border border-accent/10">
+          {val}
+        </span>
+      ) : <span className="text-text-muted text-xs">—</span>
+    },
+    {
       title: 'بواسطة',
       key: 'user',
       render: (_, row) => (
@@ -84,18 +96,20 @@ export default function ProjectDocuments({ projectId }) {
             <Download className="w-4 h-4 ml-1.5" />
             تحميل
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => {
-              if (confirm('هل أنت متأكد من حذف هذا الملف؟')) {
-                deleteDoc.mutate(row.id);
-              }
-            }}
-            className="text-status-critical hover:text-status-critical-hover hover:bg-status-critical/10 font-sans"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {isOwner && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                if (confirm('هل أنت متأكد من حذف هذا الملف؟')) {
+                  deleteDoc.mutate(row.id);
+                }
+              }}
+              className="text-status-critical hover:text-status-critical-hover hover:bg-status-critical/10 font-sans"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       )
     }
@@ -103,14 +117,16 @@ export default function ProjectDocuments({ projectId }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-bg-surface border border-border-default rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-bold font-sans text-text-primary mb-4">رفع مستند جديد</h3>
-        <FileUpload 
-          bucket="contracts" 
-          label="اختر ملفاً لرفعه إلى المشروع (عقود، مخططات، إلخ)"
-          onUploadComplete={handleUploadComplete} 
-        />
-      </div>
+      {isOwner && (
+        <div className="bg-bg-surface border border-border-default rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold font-sans text-text-primary mb-4">رفع مستند جديد</h3>
+          <FileUpload 
+            bucket="contracts" 
+            label="اختر ملفاً لرفعه إلى المشروع (عقود، مخططات، إلخ)"
+            onUploadComplete={handleUploadComplete} 
+          />
+        </div>
+      )}
 
       <div className="bg-bg-surface border border-border-default rounded-xl overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-border-default bg-bg-base/30">

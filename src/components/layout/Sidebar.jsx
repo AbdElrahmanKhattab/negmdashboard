@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ReceiptText, FileText, BarChart3, History, Settings, LogOut, Cloud, Plus } from 'lucide-react';
+import { LayoutDashboard, ReceiptText, FileText, BarChart3, History, Settings, LogOut, Cloud, Plus, UsersRound } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { signOut } from '@/hooks/useAuth';
 
@@ -10,6 +10,7 @@ const navigation = [
   { name: 'Transactions', href: '/transactions', icon: ReceiptText },
   { name: 'Clients (العملاء)', href: '/clients', icon: Users }, // Using clients instead of specs for now since we have a clients page
   { name: 'Projects (المشاريع)', href: '/projects', icon: FileText },
+  { name: 'Team (فريق العمل)', href: '/employees', icon: UsersRound },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 // Note: We adjusted the nav slightly to fit the existing pages while keeping the design aesthetic.

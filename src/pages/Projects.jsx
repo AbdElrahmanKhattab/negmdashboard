@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -15,6 +16,8 @@ export default function Projects() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const { data: projects, isLoading } = useProjects();
+  const role = useAuthStore(state => state.role);
+  const isOwner = role === 'owner';
 
   const filtered = (projects || []).filter(p =>
     p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -35,10 +38,12 @@ export default function Projects() {
           <p className="text-sm font-sans text-text-secondary mt-1 font-medium">Manage all engineering projects and monitor their health status.</p>
         </div>
         
-        <Button onClick={() => setShowForm(true)} className="bg-[#0d47a1] hover:bg-[#1565c0] shadow-sm text-white font-sans flex items-center gap-2 h-10 px-5 transition-colors border border-[#0d47a1]">
-          <Plus className="w-4 h-4 mr-1" />
-          <span className="font-bold text-sm">New Project</span>
-        </Button>
+        {isOwner && (
+          <Button onClick={() => setShowForm(true)} className="bg-[#0d47a1] hover:bg-[#1565c0] shadow-sm text-white font-sans flex items-center gap-2 h-10 px-5 transition-colors border border-[#0d47a1]">
+            <Plus className="w-4 h-4 mr-1" />
+            <span className="font-bold text-sm">New Project</span>
+          </Button>
+        )}
       </div>
 
       {/* Main Content Area */}

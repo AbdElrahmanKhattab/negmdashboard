@@ -9,19 +9,52 @@ import { useAuthStore } from '@/stores/authStore';
  */
 export function useAuthListener() {
   const setUser = useAuthStore((s) => s.setUser);
+  const setOffice = useAuthStore((s) => s.setOffice);
+  const setRole = useAuthStore((s) => s.setRole);
   const setInitialized = useAuthStore((s) => s.setInitialized);
   const navigate = useNavigate();
+
+  const syncProfile = async (userId) => {
+    if (!userId) {
+      setOffice(null);
+      setRole(null);
+      return;
+    }
+    const { data, error } = await supabase
+      .from('users')
+      .select('*, office:offices(*)')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error syncing profile:', error);
+      return;
+    }
+
+    if (data) {
+      setOffice(data.office);
+      setRole(data.role);
+    } else {
+      // No profile found - user might be in a "ghost" state or just signed up
+      setOffice(null);
+      setRole(null);
+    }
+  };
 
   useEffect(() => {
     // Get current session on mount and set initialized
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
+      syncProfile(u?.id);
       setInitialized(true);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
+      syncProfile(u?.id);
       setInitialized(true);
       
       if (event === 'SIGNED_OUT') {
@@ -30,7 +63,7 @@ export function useAuthListener() {
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, navigate]);
+  }, [setUser, setOffice, setRole, setInitialized, navigate]);
 }
 
 /**

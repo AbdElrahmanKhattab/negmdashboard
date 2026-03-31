@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Mail, Phone } from 'lucide-react';
@@ -13,6 +14,8 @@ export default function Clients() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const { data: clients, isLoading } = useClients();
+  const role = useAuthStore(state => state.role);
+  const isOwner = role === 'owner';
 
   const filtered = (clients || []).filter(c =>
     c.name?.includes(searchTerm) || c.email?.includes(searchTerm)
@@ -26,10 +29,12 @@ export default function Clients() {
           <h1 className="text-2xl font-bold font-sans text-text-primary tracking-tight">العملاء</h1>
           <p className="text-sm font-sans text-text-secondary mt-1">إدارة بيانات العملاء والشركات التي تتعامل معها.</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="bg-accent hover:bg-accent-hover text-white font-sans flex items-center gap-2 pr-4">
-          <Plus className="w-4 h-4" />
-          إضافة عميل
-        </Button>
+        {isOwner && (
+          <Button onClick={() => setShowForm(true)} className="bg-accent hover:bg-accent-hover text-white font-sans flex items-center gap-2 pr-4">
+            <Plus className="w-4 h-4" />
+            إضافة عميل
+          </Button>
+        )}
       </div>
 
       <div className="bg-bg-surface border border-border-default rounded-xl p-4 flex flex-col sm:flex-row gap-4 justify-between items-center shadow-sm">

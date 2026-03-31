@@ -10,12 +10,17 @@ import PageTransition from '@/components/common/PageTransition';
 import PaymentForm from '@/components/forms/PaymentForm';
 import MilestoneForm from '@/components/forms/MilestoneForm';
 import { useMilestone } from '@/hooks/useData';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function MilestoneDetail() {
   const { projectId, id } = useParams();
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const { data: milestone, isLoading } = useMilestone(id);
+  const role = useAuthStore(state => state.role);
+  const isOwner = role === 'owner';
+  const isAccountant = role === 'accountant';
+  const canRecordPayment = isOwner || isAccountant;
 
   if (isLoading) {
     return <div className="p-12 flex justify-center"><div className="animate-spin w-8 h-8 border-4 border-accent border-t-transparent rounded-full" /></div>;
@@ -59,7 +64,7 @@ export default function MilestoneDetail() {
 
   return (
     <PageTransition className="space-y-6">
-      <PaymentForm isOpen={showPaymentForm} onClose={() => setShowPaymentForm(false)} milestoneId={id} officeId={milestone.office_id} />
+      <PaymentForm isOpen={showPaymentForm} onClose={() => setShowPaymentForm(false)} milestoneId={id} officeId={milestone.office_id} remainingBalance={remaining} />
       <MilestoneForm isOpen={showEditForm} onClose={() => setShowEditForm(false)} projectId={projectId} initialData={milestone} />
       <div className="flex items-center gap-2 text-sm text-text-muted font-sans mb-2">
         <Link to={`/projects/${projectId || milestone.project?.id}`} className="hover:text-text-primary flex items-center gap-1 transition-colors">
@@ -80,15 +85,21 @@ export default function MilestoneDetail() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setShowEditForm(true)} className="font-sans border-border-default">
-              تعديل المرحلة
-            </Button>
-            <Button variant="outline" className="font-sans border-border-default">
-              <Calculator className="w-4 h-4 ml-2" /> إنشاء فاتورة ضريبية
-            </Button>
-            <Button onClick={() => setShowPaymentForm(true)} className="bg-status-good hover:bg-status-good/90 text-white font-sans">
-              <Plus className="w-4 h-4 ml-2" /> تسجيل دفعة جديدة
-            </Button>
+            {isOwner && (
+              <Button variant="outline" onClick={() => setShowEditForm(true)} className="font-sans border-border-default">
+                تعديل المرحلة
+              </Button>
+            )}
+            <Link to={`/projects/${projectId}/milestones/${id}/invoice`}>
+              <Button variant="outline" className="font-sans border-border-default">
+                <Calculator className="w-4 h-4 ml-2" /> إنشاء فاتورة ضريبية
+              </Button>
+            </Link>
+            {canRecordPayment && (
+              <Button onClick={() => setShowPaymentForm(true)} className="bg-status-good hover:bg-status-good/90 text-white font-sans">
+                <Plus className="w-4 h-4 ml-2" /> تسجيل دفعة جديدة
+              </Button>
+            )}
           </div>
         </div>
 

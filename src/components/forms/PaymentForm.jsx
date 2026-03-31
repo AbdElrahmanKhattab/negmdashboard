@@ -10,8 +10,9 @@ import FileUpload from '@/components/common/FileUpload';
 import { useCreatePayment } from '@/hooks/useData';
 import { useAuthStore } from '@/stores/authStore';
 import { Receipt } from 'lucide-react';
+import { toast } from 'sonner';
 
-export default function PaymentForm({ isOpen, onClose, milestoneId, officeId }) {
+export default function PaymentForm({ isOpen, onClose, milestoneId, officeId, remainingBalance }) {
   const user = useAuthStore(s => s.user);
   const createPayment = useCreatePayment();
   const [receipt, setReceipt] = useState(null);
@@ -20,6 +21,12 @@ export default function PaymentForm({ isOpen, onClose, milestoneId, officeId }) 
   });
 
   const onSubmit = async (values) => {
+    const amount = Number(values.amount_paid);
+    if (amount > remainingBalance) {
+      toast.error(`المبلغ المدفوع (${amount}) يتجاوز الرصيد المتبقي (${remainingBalance})`);
+      return;
+    }
+
     await createPayment.mutateAsync({
       ...values,
       milestone_id: milestoneId,

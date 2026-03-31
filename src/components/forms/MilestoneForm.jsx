@@ -14,6 +14,8 @@ import { supabase } from '@/lib/supabase';
 export default function MilestoneForm({ isOpen, onClose, projectId, initialData = null }) {
   const qc = useQueryClient();
   const user = useAuthStore(s => s.user);
+  const role = useAuthStore(state => state.role);
+  const isOwner = role === 'owner';
   const createMilestone = useCreateMilestone();
   const updateMilestone = useMutation({
     mutationFn: async ({ id, ...payload }) => {
@@ -84,9 +86,11 @@ export default function MilestoneForm({ isOpen, onClose, projectId, initialData 
         </FormField>
 
         <div className="flex gap-3 pt-4 border-t border-border-default">
-          <Button type="submit" disabled={createMilestone.isPending} className="bg-accent hover:bg-accent-hover text-white font-sans flex-1">
-            {createMilestone.isPending ? 'جاري الحفظ...' : 'إضافة المرحلة'}
-          </Button>
+          {isOwner && (
+            <Button type="submit" disabled={createMilestone.isPending} className="bg-accent hover:bg-accent-hover text-white font-sans flex-1">
+              {createMilestone.isPending ? 'جاري الحفظ...' : 'إضافة المرحلة'}
+            </Button>
+          )}
           <Button type="button" variant="outline" onClick={onClose} className="font-sans border-border-default">إلغاء</Button>
         </div>
       </form>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Share2, Edit, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import HealthBadge from '@/components/common/HealthBadge';
 import StatusBadge from '@/components/common/StatusBadge';
 import MilestoneCard from '@/components/common/MilestoneCard';
@@ -11,6 +12,7 @@ import ActivityFeed from '@/components/common/ActivityFeed';
 import KPICard from '@/components/common/KPICard';
 import PageTransition from '@/components/common/PageTransition';
 import MilestoneForm from '@/components/forms/MilestoneForm';
+import ProjectForm from '@/components/forms/ProjectForm';
 import ProjectDocuments from './ProjectDocuments';
 import { useProject, useComments, useActivityLog, useCreateComment } from '@/hooks/useData';
 import { useRealtimeComments } from '@/hooks/useRealtime';
@@ -20,7 +22,10 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [showMilestoneForm, setShowMilestoneForm] = useState(false);
+  const [showEditProjectForm, setShowEditProjectForm] = useState(false);
   const user = useAuthStore(s => s.user);
+  const role = useAuthStore(state => state.role);
+  const isOwner = role === 'owner';
 
   const { data: project, isLoading } = useProject(id);
   const { data: comments } = useComments(id);
@@ -64,9 +69,16 @@ const milestones = (project.milestones || []).map(m => ({
     });
   };
 
+  const handleShare = () => {
+    const url = `${window.location.origin}/share/${project.share_token}`;
+    navigator.clipboard.writeText(url);
+    toast.success('تم نسخ رابط المشاركة بنجاح');
+  };
+
   return (
     <PageTransition className="space-y-6 flex flex-col h-full">
       <MilestoneForm isOpen={showMilestoneForm} onClose={() => setShowMilestoneForm(false)} projectId={id} />
+      <ProjectForm isOpen={showEditProjectForm} onClose={() => setShowEditProjectForm(false)} initialData={project} />
       <div className="flex items-center gap-2 text-sm text-text-muted font-sans mb-2 shrink-0">
         <Link to="/projects" className="hover:text-text-primary flex items-center gap-1 transition-colors">
           <ArrowRight className="w-4 h-4" /> العودة للمشاريع
@@ -86,12 +98,14 @@ const milestones = (project.milestones || []).map(m => ({
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="font-sans border-border-default h-9">
+            <Button variant="outline" onClick={handleShare} className="font-sans border-border-default h-9">
               <Share2 className="w-4 h-4 ml-2" /> مشاركة رابط العميل
             </Button>
-            <Button variant="outline" className="font-sans border-border-default h-9">
-              <Edit className="w-4 h-4 ml-2" /> تعديل
-            </Button>
+            {isOwner && (
+              <Button variant="outline" onClick={() => setShowEditProjectForm(true)} className="font-sans border-border-default h-9">
+                <Edit className="w-4 h-4 ml-2" /> تعديل
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -147,11 +161,13 @@ const milestones = (project.milestones || []).map(m => ({
 
         {activeTab === 'milestones' && (
           <div>
-            <div className="flex justify-end mb-4">
-              <Button onClick={() => setShowMilestoneForm(true)} className="bg-accent hover:bg-accent-hover text-white font-sans">
-                <Plus className="w-4 h-4 ml-2" /> إضافة مرحلة
-              </Button>
-            </div>
+            {isOwner && (
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setShowMilestoneForm(true)} className="bg-accent hover:bg-accent-hover text-white font-sans">
+                  <Plus className="w-4 h-4 ml-2" /> إضافة مرحلة
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {milestones.length === 0 ? (
               <div className="col-span-full p-8 text-center text-text-muted font-sans text-sm">لا توجد مراحل مالية بعد.</div>

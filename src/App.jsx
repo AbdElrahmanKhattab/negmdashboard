@@ -13,6 +13,8 @@ import Login from './pages/Login'
 import ClientShare from './pages/ClientShare'
 import Analytics from './pages/Analytics'
 import Reports from './pages/Reports'
+import Employees from './pages/Employees'
+import MilestoneInvoice from './pages/MilestoneInvoice'
 
 import { useAuthListener } from './hooks/useAuth'
 
@@ -38,6 +40,7 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/projects/:projectId/milestones/:id" element={<MilestoneDetail />} />
+          <Route path="/projects/:projectId/milestones/:id/invoice" element={<MilestoneInvoice />} />
           
           <Route path="/clients" element={<Clients />} />
           <Route path="/clients/:id" element={<ClientDetail />} />
@@ -45,6 +48,7 @@ function App() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/employees" element={<Employees />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

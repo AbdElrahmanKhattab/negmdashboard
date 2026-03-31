@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 
 /* ─── CLIENTS ─────────────────────────────────────────── */
 
@@ -173,7 +174,7 @@ export function useMilestone(id) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('milestones')
-        .select('*, payments(*), project:projects(name, id)')
+        .select('*, payments(*), project:projects(name, id, client:clients(*))')
         .eq('id', id)
         .order('paid_at', { foreignTable: 'payments', ascending: false })
         .single();
@@ -358,6 +359,23 @@ export function useDocuments(projectId) {
   });
 }
 
+export function useInvoiceSearch(invoiceId) {
+  return useQuery({
+    queryKey: ['invoice-search', invoiceId],
+    queryFn: async () => {
+      if (!invoiceId) return null;
+      const { data, error } = await supabase
+        .from('project_documents')
+        .select('*, project:projects(name)')
+        .ilike('invoice_id', `%${invoiceId}%`)
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!invoiceId && invoiceId.length > 2,
+  });
+}
+
 export function useCreateDocument() {
   const qc = useQueryClient();
   return useMutation({
@@ -413,5 +431,80 @@ export function useDashboardKPIs() {
 
       return { totalContractValue, totalIncome, totalExpenses, activeProjects, lateMilestones };
     },
+  });
+}
+
+/* ─── EMPLOYEES (Users Table) ────────────────────────── */
+
+export function useEmployees() {
+  return useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useUpdateEmployeeRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, role }) => {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ role })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+  });
+}
+
+export function useDeleteEmployee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+  });
+}
+
+export function useCreateEmployee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ full_name, email, password, role }) => {
+      // We now call a secure Edge Function to handle atomic creation
+      // and prevent the admin from being logged out by session conflicts.
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { data, error } = await supabase.functions.invoke('create-employee', {
+        body: { full_name, email, password, role },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
+      });
+
+      if (error) {
+        // Functions error might be nested
+        const msg = typeof error === 'string' ? error : (error.message || 'Server error');
+        throw new Error(msg);
+      }
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
   });
 }

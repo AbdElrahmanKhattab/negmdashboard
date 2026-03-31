@@ -6,29 +6,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import FormModal from '@/components/common/FormModal';
 import FormField from '@/components/common/FormField';
-import { useCreateProject, useClients } from '@/hooks/useData';
+import { useCreateProject, useUpdateProject, useClients } from '@/hooks/useData';
 import { useAuthStore } from '@/stores/authStore';
 
-export default function ProjectForm({ isOpen, onClose }) {
+export default function ProjectForm({ isOpen, onClose, initialData = null }) {
   const user = useAuthStore(s => s.user);
   const createProject = useCreateProject();
+  const updateProject = useUpdateProject();
   const { data: clients } = useClients();
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(projectSchema),
+    defaultValues: initialData || {},
   });
 
   const onSubmit = async (values) => {
-    await createProject.mutateAsync({
-      ...values,
-      office_id: user?.user_metadata?.office_id,
-      created_by: user?.id,
-    });
+    if (initialData?.id) {
+      await updateProject.mutateAsync({ id: initialData.id, ...values });
+    } else {
+      await createProject.mutateAsync({
+        ...values,
+        office_id: user?.user_metadata?.office_id,
+        created_by: user?.id,
+      });
+    }
     reset();
     onClose();
   };
 
   return (
-    <FormModal isOpen={isOpen} onClose={onClose} title="إضافة مشروع جديد">
+    <FormModal isOpen={isOpen} onClose={onClose} title={initialData ? "تعديل المشروع" : "إضافة مشروع جديد"}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <FormField label="اسم المشروع" error={errors.name?.message}>
           <Input {...register('name')} placeholder="مثال: فيلا سكنية مزدوجة" className="bg-bg-base" />
@@ -61,8 +67,8 @@ export default function ProjectForm({ isOpen, onClose }) {
         </FormField>
 
         <div className="flex gap-3 pt-4 border-t border-border-default">
-          <Button type="submit" disabled={createProject.isPending} className="bg-accent hover:bg-accent-hover text-white font-sans flex-1">
-            {createProject.isPending ? 'جاري الحفظ...' : 'إنشاء المشروع'}
+          <Button type="submit" disabled={createProject.isPending || updateProject.isPending} className="bg-accent hover:bg-accent-hover text-white font-sans flex-1">
+            {createProject.isPending || updateProject.isPending ? 'جاري الحفظ...' : (initialData ? 'تحديث المشروع' : 'إنشاء المشروع')}
           </Button>
           <Button type="button" variant="outline" onClick={onClose} className="font-sans border-border-default">إلغاء</Button>
         </div>
