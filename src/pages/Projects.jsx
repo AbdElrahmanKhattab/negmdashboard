@@ -9,10 +9,11 @@ import AmountDisplay from '@/components/common/AmountDisplay';
 import PageTransition from '@/components/common/PageTransition';
 import ProjectForm from '@/components/forms/ProjectForm';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useProjects } from '@/hooks/useData';
 
 export default function Projects() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const { data: projects, isLoading } = useProjects();
@@ -99,9 +100,13 @@ export default function Projects() {
               </thead>
               <tbody className="divide-y divide-border-subtle text-text-primary">
                 {filtered.map((project) => (
-                  <tr key={project.id} className="hover:bg-[#f8fafc] transition-colors cursor-pointer group">
+                  <tr 
+                    key={project.id} 
+                    className="hover:bg-[#f8fafc] transition-colors cursor-pointer group"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
                     <td className="px-6 py-5">
-                      <Link to={`/projects/${project.id}`} className="font-bold text-sm text-text-primary group-hover:text-[#0d47a1] transition-colors block">
+                      <Link to={`/projects/${project.id}`} onClick={e => e.stopPropagation()} className="font-bold text-sm text-text-primary group-hover:text-[#0d47a1] transition-colors block">
                         {project.name}
                       </Link>
                       <span className="text-xs text-text-muted font-medium mt-1 inline-block">ID: {project.id.slice(0,8)}</span>

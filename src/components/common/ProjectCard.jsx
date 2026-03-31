@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import HealthBadge from './HealthBadge';
@@ -7,6 +7,7 @@ import Avatar from './Avatar';
 import AmountDisplay from './AmountDisplay';
 
 export default function ProjectCard({ project, className }) {
+  const navigate = useNavigate();
   // Safe defaults
   const {
     id = '',
@@ -20,17 +21,19 @@ export default function ProjectCard({ project, className }) {
   } = project || {};
 
   return (
-    <div className={cn(
-      "bg-bg-surface border border-border-default rounded-xl p-5 hover:border-border-strong transition-all flex flex-col group shadow-sm",
-      className
-    )}>
+    <div 
+      onClick={() => navigate(`/projects/${id}`)}
+      className={cn(
+        "bg-bg-surface border border-border-default rounded-xl p-5 hover:border-border-strong transition-all flex flex-col group shadow-sm cursor-pointer hover:shadow-md",
+        className
+      )}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-bg-base border border-border-default flex items-center justify-center text-text-muted group-hover:text-accent transition-colors">
             <Briefcase className="w-5 h-5" />
           </div>
           <div>
-            <Link to={`/projects/${id}`} className="font-semibold text-text-primary hover:text-accent font-sans text-base block">
+            <Link to={`/projects/${id}`} onClick={e => e.stopPropagation()} className="font-semibold text-text-primary hover:text-accent font-sans text-base block">
               {name}
             </Link>
             <div className="flex items-center gap-2 mt-1">
