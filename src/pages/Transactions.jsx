@@ -30,6 +30,7 @@ const CATEGORY_MAP_EN = {
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showForm, setShowForm] = useState(false);
   const { data: transactions, isLoading } = useTransactions();
   const role = useAuthStore(state => state.role);
   const canManageTx = role === 'owner' || role === 'accountant';
