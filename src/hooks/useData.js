@@ -62,6 +62,20 @@ export function useUpdateClient() {
   });
 }
 
+export function useDeleteClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('clients').delete().eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['clients'] });
+    },
+  });
+}
+
 /* ─── PROJECTS ────────────────────────────────────────── */
 
 export function useProjects() {
@@ -141,6 +155,20 @@ export function useUpdateProject() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['projects'] });
       qc.invalidateQueries({ queryKey: ['projects', vars.id] });
+    },
+  });
+}
+
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }

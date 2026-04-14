@@ -5,23 +5,22 @@ import { ArrowRight, Share2, Edit, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import HealthBadge from '@/components/common/HealthBadge';
 import StatusBadge from '@/components/common/StatusBadge';
-import MilestoneCard from '@/components/common/MilestoneCard';
 import TimelineView from '@/components/common/TimelineView';
 import CommentThread from '@/components/common/CommentThread';
 import ActivityFeed from '@/components/common/ActivityFeed';
 import KPICard from '@/components/common/KPICard';
 import PageTransition from '@/components/common/PageTransition';
-import MilestoneForm from '@/components/forms/MilestoneForm';
 import ProjectForm from '@/components/forms/ProjectForm';
 import ProjectDocuments from './ProjectDocuments';
+import ProjectStages from '@/components/common/ProjectStages';
 import { useProject, useComments, useActivityLog, useCreateComment } from '@/hooks/useData';
+import { useStageProgress } from '@/hooks/useProjectStages';
 import { useRealtimeComments } from '@/hooks/useRealtime';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function ProjectDetail() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
-  const [showMilestoneForm, setShowMilestoneForm] = useState(false);
   const [showEditProjectForm, setShowEditProjectForm] = useState(false);
   const user = useAuthStore(s => s.user);
   const role = useAuthStore(state => state.role);
@@ -30,13 +29,14 @@ export default function ProjectDetail() {
   const { data: project, isLoading } = useProject(id);
   const { data: comments } = useComments(id);
   const { data: activities } = useActivityLog(id);
+  const { data: stageProgress } = useStageProgress(id);
   const addComment = useCreateComment();
 
   useRealtimeComments(id);
 
   const tabs = [
     { id: 'overview', label: 'نظرة عامة' },
-    { id: 'milestones', label: 'المراحل المالية' },
+    { id: 'stages', label: 'المراحل' },
     { id: 'documents', label: 'المستندات' },
     { id: 'timeline', label: 'الجدول الزمني' },
     { id: 'comments', label: 'التعليقات' },
@@ -77,7 +77,6 @@ const milestones = (project.milestones || []).map(m => ({
 
   return (
     <PageTransition className="space-y-6 flex flex-col h-full">
-      <MilestoneForm isOpen={showMilestoneForm} onClose={() => setShowMilestoneForm(false)} projectId={id} />
       <ProjectForm isOpen={showEditProjectForm} onClose={() => setShowEditProjectForm(false)} initialData={project} />
       <div className="flex items-center gap-2 text-sm text-text-muted font-sans mb-2 shrink-0">
         <Link to="/projects" className="hover:text-text-primary flex items-center gap-1 transition-colors">
@@ -108,6 +107,24 @@ const milestones = (project.milestones || []).map(m => ({
             )}
           </div>
         </div>
+
+        {/* Stage Progress Indicator */}
+        {stageProgress && stageProgress.total > 0 && (
+          <div className="mt-4 pt-4 border-t border-border-subtle">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-sans font-medium text-text-primary">تقدم المراحل</span>
+              <span className="text-xs font-sans text-text-muted">
+                {stageProgress.progress}% ({stageProgress.completed}/{stageProgress.total} مراحل مكتملة)
+              </span>
+            </div>
+            <div className="w-full bg-bg-elevated rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-l from-status-good to-status-good/70 transition-all duration-500 rounded-full"
+                style={{ width: `${stageProgress.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex space-x-2 space-x-reverse border-b border-border-default shrink-0 overflow-x-auto pb-px">
@@ -159,25 +176,8 @@ const milestones = (project.milestones || []).map(m => ({
           </div>
         )}
 
-        {activeTab === 'milestones' && (
-          <div>
-            {isOwner && (
-              <div className="flex justify-end mb-4">
-                <Button onClick={() => setShowMilestoneForm(true)} className="bg-accent hover:bg-accent-hover text-white font-sans">
-                  <Plus className="w-4 h-4 ml-2" /> إضافة مرحلة
-                </Button>
-              </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {milestones.length === 0 ? (
-              <div className="col-span-full p-8 text-center text-text-muted font-sans text-sm">لا توجد مراحل مالية بعد.</div>
-            ) : milestones.map(m => (
-              <Link to={`/projects/${id}/milestones/${m.id}`} key={m.id} className="block group">
-                <MilestoneCard milestone={m} className="h-full" />
-              </Link>
-            ))}
-            </div>
-          </div>
+        {activeTab === 'stages' && (
+          <ProjectStages projectId={id} />
         )}
 
         {activeTab === 'documents' && (

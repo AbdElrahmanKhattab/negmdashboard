@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Trash2 } from 'lucide-react';
 import HealthBadge from '@/components/common/HealthBadge';
 import Avatar from '@/components/common/Avatar';
 import AmountDisplay from '@/components/common/AmountDisplay';
@@ -10,24 +10,40 @@ import PageTransition from '@/components/common/PageTransition';
 import ProjectForm from '@/components/forms/ProjectForm';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
-import { useProjects } from '@/hooks/useData';
+import { useProjects, useDeleteProject } from '@/hooks/useData';
+import { toast } from 'sonner';
 
 export default function Projects() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const { data: projects, isLoading } = useProjects();
+  const deleteProject = useDeleteProject();
   const role = useAuthStore(state => state.role);
   const isOwner = role === 'owner';
 
   const filtered = (projects || []).filter(p =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.client_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleDelete = (project) => {
+    if (window.confirm(`هل أنت متأكد من حذف "${project.name}"؟\nسيتم حذف جميع المراحل والمدفوعات المرتبطة.`)) {
+      deleteProject.mutate(project.id, {
+        onSuccess: () => {
+          toast.success('تم حذف المشروع بنجاح');
+        },
+        onError: (error) => {
+          toast.error('فشل في حذف المشروع: ' + error.message);
+        }
+      });
+    }
+  };
+
   return (
     <PageTransition className="space-y-8 pb-10">
-      <ProjectForm isOpen={showForm} onClose={() => setShowForm(false)} />
+      <ProjectForm isOpen={showForm} onClose={() => { setShowForm(false); setEditingProject(null); }} initialData={editingProject} />
       
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -96,34 +112,38 @@ export default function Projects() {
                   <th className="px-6 py-4 text-right">
                     Value / Due <div className="text-[10px] text-text-muted mt-0.5 lowercase capitalize-first font-sans text-right">القيمة / المستحق</div>
                   </th>
+                  {isOwner && (
+                    <th className="px-6 py-4 text-right">
+                      Actions <div className="text-[10px] text-text-muted mt-0.5 lowercase capitalize-first font-sans text-right">إجراءات</div>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle text-text-primary">
                 {filtered.map((project) => (
-                  <tr 
-                    key={project.id} 
-                    className="hover:bg-[#f8fafc] transition-colors cursor-pointer group"
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                  <tr
+                    key={project.id}
+                    className="hover:bg-[#f8fafc] transition-colors group"
                   >
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-5 cursor-pointer" onClick={() => navigate(`/projects/${project.id}`)}>
                       <Link to={`/projects/${project.id}`} onClick={e => e.stopPropagation()} className="font-bold text-sm text-text-primary group-hover:text-[#0d47a1] transition-colors block">
                         {project.name}
                       </Link>
                       <span className="text-xs text-text-muted font-medium mt-1 inline-block">ID: {project.id.slice(0,8)}</span>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-5 cursor-pointer" onClick={() => navigate(`/projects/${project.id}`)}>
                       <div className="flex items-center gap-3">
                         <Avatar alt={project.client_name} size="sm" />
                         <span className="font-semibold text-sm text-text-secondary">{project.client_name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-5 cursor-pointer" onClick={() => navigate(`/projects/${project.id}`)}>
                       <HealthBadge health={project.health} />
                     </td>
-                    <td className="px-6 py-5 w-48">
+                    <td className="px-6 py-5 w-48 cursor-pointer" onClick={() => navigate(`/projects/${project.id}`)}>
                       <div className="flex items-center gap-3">
                         <div className="w-full h-2 bg-[#e2e8f0] rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className={cn("h-full rounded-full transition-all", project.progress === 100 ? "bg-[#10b981]" : "bg-[#0d47a1]")}
                             style={{ width: `${project.progress}%` }}
                           />
@@ -131,7 +151,7 @@ export default function Projects() {
                         <span className="text-xs font-bold text-text-secondary tracking-widest">{project.progress}%</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-right flex flex-col items-end gap-1">
+                    <td className="px-6 py-5 text-right flex flex-col items-end gap-1 cursor-pointer" onClick={() => navigate(`/projects/${project.id}`)}>
                       <div className="font-bold text-sm">
                         <AmountDisplay amount={Number(project.total_contract_value)} size="sm" type="neutral" />
                       </div>
@@ -141,6 +161,31 @@ export default function Projects() {
                         </div>
                       )}
                     </td>
+                    {isOwner && (
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setEditingProject(project); setShowForm(true); }}
+                            className="h-8 w-8 p-0 hover:bg-accent/10"
+                            title="تعديل"
+                          >
+                            <Plus className="w-4 h-4 rotate-45 text-accent" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(project); }}
+                            className="h-8 w-8 p-0 hover:bg-status-critical/10"
+                            title="حذف"
+                            disabled={deleteProject.isPending}
+                          >
+                            <Trash2 className="w-4 h-4 text-status-critical" />
+                          </Button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
