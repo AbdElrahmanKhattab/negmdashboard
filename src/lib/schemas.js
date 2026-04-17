@@ -17,6 +17,8 @@ export const projectSchema = z.object({
   start_date: z.string().optional().or(z.literal('')),
   end_date: z.string().optional().or(z.literal('')),
   description: z.string().optional().or(z.literal('')),
+  is_supervised: z.boolean().optional(),
+  supervisor_id: z.string().uuid().optional().nullable().or(z.literal('')),
 });
 
 /* ─── MILESTONE SCHEMA ────────────────────────────────── */

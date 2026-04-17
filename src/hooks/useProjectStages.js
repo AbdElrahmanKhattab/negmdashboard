@@ -21,7 +21,10 @@ export function useProjectStages(projectId) {
         .order('order_index', { ascending: true });
       
       if (error) throw error;
-      return data;
+      return data.map(stage => ({
+        ...stage,
+        supervisor: stage.supervisor_name ? { full_name: stage.supervisor_name } : null
+      }));
     },
     enabled: !!projectId,
   });
@@ -45,7 +48,10 @@ export function useProjectStage(stageId) {
         .single();
       
       if (error) throw error;
-      return data;
+      return {
+        ...data,
+        supervisor: data.supervisor_name ? { full_name: data.supervisor_name } : null
+      };
     },
     enabled: !!stageId,
   });

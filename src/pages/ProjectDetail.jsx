@@ -13,6 +13,7 @@ import PageTransition from '@/components/common/PageTransition';
 import ProjectForm from '@/components/forms/ProjectForm';
 import ProjectDocuments from './ProjectDocuments';
 import ProjectStages from '@/components/common/ProjectStages';
+import ProjectLicenses from '@/components/common/ProjectLicenses';
 import { useProject, useComments, useActivityLog, useCreateComment } from '@/hooks/useData';
 import { useStageProgress } from '@/hooks/useProjectStages';
 import { useRealtimeComments } from '@/hooks/useRealtime';
@@ -37,6 +38,7 @@ export default function ProjectDetail() {
   const tabs = [
     { id: 'overview', label: 'نظرة عامة' },
     { id: 'stages', label: 'المراحل' },
+    { id: 'licenses', label: 'الرخص' },
     { id: 'documents', label: 'المستندات' },
     { id: 'timeline', label: 'الجدول الزمني' },
     { id: 'comments', label: 'التعليقات' },
@@ -164,6 +166,18 @@ const milestones = (project.milestones || []).map(m => ({
                     <span className="text-text-secondary">تاريخ التسليم</span>
                     <span className="col-span-2 text-text-primary font-mono" dir="ltr">{project.end_date || '–'}</span>
                   </div>
+                  <div className="grid grid-cols-3 border-b border-border-subtle pb-3">
+                    <span className="text-text-secondary">الإشراف الهندسي</span>
+                    <span className="col-span-2 text-text-primary">
+                      {project.is_supervised ? (
+                        <span className="text-accent flex items-center gap-1 font-medium">
+                          مفعل {project.supervisor?.full_name ? `(${project.supervisor.full_name})` : '(بدون مشرف معين)'}
+                        </span>
+                      ) : (
+                        <span className="text-text-muted">غير مفعل</span>
+                      )}
+                    </span>
+                  </div>
                   {project.description && (
                     <div className="grid grid-cols-3 pb-3">
                       <span className="text-text-secondary">الوصف</span>
@@ -178,6 +192,10 @@ const milestones = (project.milestones || []).map(m => ({
 
         {activeTab === 'stages' && (
           <ProjectStages projectId={id} />
+        )}
+
+        {activeTab === 'licenses' && (
+          <ProjectLicenses projectId={id} />
         )}
 
         {activeTab === 'documents' && (

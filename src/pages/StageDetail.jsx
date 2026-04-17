@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProjectStage, useUpdateStage, useCreateStagePayment, useUploadStageDocument, useDeleteStageDocument } from '@/hooks/useProjectStages';
-import { useProject } from '@/hooks/useData';
+import { useProject, useEmployees } from '@/hooks/useData';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, DollarSign, Calendar, FileText, Upload, Trash2, ExternalLink, Plus, AlertCircle } from 'lucide-react';
+import { ArrowRight, DollarSign, Calendar, FileText, Upload, Trash2, ExternalLink, Plus, AlertCircle, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ export default function StageDetail() {
 
   const { data: stage, isLoading } = useProjectStage(stageId);
   const { data: project } = useProject(projectId);
+  const { data: employees } = useEmployees();
   const updateStage = useUpdateStage();
   const createPayment = useCreateStagePayment();
   const uploadDocument = useUploadStageDocument();
@@ -145,6 +146,41 @@ export default function StageDetail() {
               {formatDate(stage.deadline)}
             </div>
           </div>
+        </div>
+
+        {/* Supervision Info */}
+        <div className="mt-4 pt-4 border-t border-border-subtle flex items-center gap-4">
+          <div className="flex items-center gap-2 text-text-muted">
+            <UserCheck className="w-5 h-5 text-accent" />
+            <span className="font-sans text-sm font-medium">مشرف المرحلة:</span>
+          </div>
+          {isOwner ? (
+            <select
+              className="rounded-md border border-border-default bg-bg-base px-3 py-1.5 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-accent min-w-[200px]"
+              value={stage.supervisor_id || ''}
+              onChange={(e) => updateStage.mutate({ stageId, supervisor_id: e.target.value || null })}
+              disabled={updateStage.isPending}
+            >
+              <option value="">
+                {project?.is_supervised && project?.supervisor?.full_name
+                  ? `← اعتماد مشرف المشروع (${project.supervisor.full_name})`
+                  : 'بدون مشرف'}
+              </option>
+              {(employees || []).map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+              ))}
+            </select>
+          ) : (
+            <div className="text-sm font-sans text-text-primary">
+              {stage.supervisor?.full_name ? (
+                <span className="text-accent font-medium">{stage.supervisor.full_name}</span>
+              ) : project?.is_supervised && project?.supervisor?.full_name ? (
+                <span className="text-accent font-medium">{project.supervisor.full_name} <span className="text-text-muted text-xs">(مشرف المشروع)</span></span>
+              ) : (
+                <span className="text-text-muted">بدون مشرف</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -84,7 +84,7 @@ export function useProjects() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, client:clients(name), milestones(id, amount, status)')
+        .select('*, client:clients(name), milestones(id, amount, status), supervisor:users!projects_supervisor_id_fkey(full_name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       // Compute progress percentage
@@ -106,7 +106,7 @@ export function useProject(id) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, client:clients(name, id), milestones(*)')
+        .select('*, client:clients(name, id), milestones(*), supervisor:users!projects_supervisor_id_fkey(full_name)')
         .eq('id', id)
         .single();
       if (error) throw error;

@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
 import StageDetail from './pages/StageDetail'
+import LicenseDetail from './pages/LicenseDetail'
 // MilestoneDetail temporarily disabled - milestones replaced by stages
 // import MilestoneDetail from './pages/MilestoneDetail'
 import Clients from './pages/Clients'
@@ -45,6 +46,9 @@ function App() {
           
           {/* Stage detail route - replaces milestone detail */}
           <Route path="/projects/:projectId/stages/:stageId" element={<StageDetail />} />
+          
+          {/* License detail route */}
+          <Route path="/projects/:projectId/licenses/:licenseId" element={<LicenseDetail />} />
           
           {/* Milestone routes temporarily disabled */}
           {/* <Route path="/projects/:projectId/milestones/:id" element={<MilestoneDetail />} /> */}
